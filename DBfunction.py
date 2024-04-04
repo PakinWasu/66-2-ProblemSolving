@@ -54,26 +54,24 @@ def get_productname():
         if sqliteConnection:
             sqliteConnection.close()
             return(proname)    
-
-def get_idshelf_by_productname(proname):
+def get_idshelf_by_productname(pronames):
     try:
         sqliteConnection = sqlite3.connect(sqlfile)
         cursor = sqliteConnection.cursor()
-        sqlite_select_query = """SELECT Product.IDshelf FROM Product WHERE Product.Name = ?;"""
-        data = (proname)
-        cursor.execute(sqlite_select_query,(data,))
-        record = cursor.fetchone()
-        idshelf = []
-        for i in record:
-            idshelf.append(i)
+        # สร้างสตริงสำหรับใช้ใน SQLite IN clause ด้วยจำนวนตัวแปรที่ถูกกำหนดโดยใช้ ? ในสตริง
+        placeholders = ",".join("?" * len(pronames))
+        sqlite_select_query = f"""SELECT Product.IDshelf FROM Product WHERE Product.Name IN ({placeholders});"""
+        cursor.execute(sqlite_select_query, pronames)
+        records = cursor.fetchall()
+        idshelfs = []
+        for record in records:
+            idshelfs.append(record[0])
     except sqlite3.Error as error:
-        print("Failed to read single row from sqlite table", error)
+        print("Failed to read rows from sqlite table", error)
     finally:
         if sqliteConnection:
             sqliteConnection.close()
-            return(idshelf[0])    
-
-
+            return idshelfs
 def get_pos_node():
     try:
         sqliteConnection = sqlite3.connect(sqlfile)
