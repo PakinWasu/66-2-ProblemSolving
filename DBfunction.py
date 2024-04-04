@@ -4,7 +4,6 @@ def get_node():
     try:
         sqliteConnection = sqlite3.connect(sqlfile)
         cursor = sqliteConnection.cursor()
-        print("Connected to SQLite")
         sqlite_select_query = """SELECT IDshelf 
                                 FROM Shelf;"""
         cursor.execute(sqlite_select_query)
@@ -18,14 +17,12 @@ def get_node():
     finally:
         if sqliteConnection:
             sqliteConnection.close()
-            print("The SQLite connection is closed")
             return(IDshelf)
 
 def get_distanc():
     try:
         sqliteConnection = sqlite3.connect(sqlfile)
         cursor = sqliteConnection.cursor()
-        print("Connected to SQLite")
         sqlite_select_query = """SELECT nodesrc,nodedest,weigh FROM Distanc;"""
         cursor.execute(sqlite_select_query)
         record = cursor.fetchall()
@@ -37,10 +34,63 @@ def get_distanc():
     finally:
         if sqliteConnection:
             sqliteConnection.close()
-            print("The SQLite connection is closed")
             return(edge)
     
-    
-            
 
-    
+def get_productname():
+    try:
+        sqliteConnection = sqlite3.connect(sqlfile)
+        cursor = sqliteConnection.cursor()
+        sqlite_select_query = """SELECT Product.Name FROM Product;"""
+        cursor.execute(sqlite_select_query)
+        record = cursor.fetchall()
+        proname = []
+        for i in record:
+            for k in i: 
+                proname.append(k)
+    except sqlite3.Error as error:
+        print("Failed to read single row from sqlite table", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+            return(proname)    
+
+def get_idshelf_by_productname(proname):
+    try:
+        sqliteConnection = sqlite3.connect(sqlfile)
+        cursor = sqliteConnection.cursor()
+        sqlite_select_query = """SELECT Product.IDshelf FROM Product WHERE Product.Name = ?;"""
+        data = (proname)
+        cursor.execute(sqlite_select_query,(data,))
+        record = cursor.fetchone()
+        idshelf = []
+        for i in record:
+            idshelf.append(i)
+    except sqlite3.Error as error:
+        print("Failed to read single row from sqlite table", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+            return(idshelf[0])    
+
+
+def get_pos_node():
+    try:
+        sqliteConnection = sqlite3.connect(sqlfile)
+        cursor = sqliteConnection.cursor()
+        sqlite_select_query = """SELECT Posmap.IDshelf,Posmap.x,Posmap.y FROM Posmap"""
+        cursor.execute(sqlite_select_query)
+        record = cursor.fetchall()
+        pos = {}
+        for i in record:
+            pos[i[0]] = i[1:]
+    except sqlite3.Error as error:
+        print("Failed to read single row from sqlite table", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+    return(pos)
+
+
+# pos = get_pos_node()
+# print(pos)
