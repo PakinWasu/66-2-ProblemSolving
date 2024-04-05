@@ -1,13 +1,12 @@
-
 import tkinter as tk
+from tkinter import messagebox
+from tkinter import scrolledtext  # เพิ่มนี้เพื่อใช้งาน Text Widget
 import DBfunction as db
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import networkx as nx
 import matplotlib.image as mpimg
 from collections import Counter
-
-
 
 
 
@@ -92,14 +91,17 @@ def find_path(slcnode):
     return short_path_use
 
 
-
 def on_select(event=None):
     global selected_items
     selected_indices = listbox.curselection()
     selected_items = [listbox.get(idx) for idx in selected_indices]
-    label.config(text="You selected: " + ", ".join(selected_items))
-    draw_graph()  # Redraw the graph when selection changes
+    listbox_selection.delete(1.0, tk.END)  # เคลียร์ข้อความทั้งหมดใน Text Widget
+    listbox_selection.insert(tk.END, "You selected:\n")  # เพิ่มข้อความ "You selected:" ที่บรรทัดแรก
+    for item in selected_items:
+        listbox_selection.insert(tk.END, f"{item}\n")  # เพิ่มรายการที่เลือกแต่ละรายการในบรรทัดใหม่
+    draw_graph()  
 
+dis = ''
 def draw_graph():
     global selected_nodes
     network = nx.Graph()
@@ -121,8 +123,11 @@ def draw_graph():
     #     re = (prenode,{'label':str(db.get_productname_by_idshelf(prenode))})
     #     namepro.append(re)
     # print(namepro)   
+    global dis
     dis = total_dis(pathsh)
-    print(dis)
+    dis = 'Total Distance : '+ str(dis)
+    my_label.config(text=dis)
+    # print(dis)
     network.add_nodes_from(selected_nodes)
     network.add_weighted_edges_from(pathsh)
     pos = db.get_pos_node()
@@ -136,23 +141,42 @@ def draw_graph():
     canvas_widget.place(x=0, y=0)  # Show the matplotlib canvas at position (0, 0)
 
 
+
+def exit_program():
+    if messagebox.askokcancel("Exit", "Are you sure you want to exit?"):
+        root.destroy()
+
 root = tk.Tk()
 root.title('makro')
-# Create a Canvas for the background image
+
 canvas = tk.Canvas(root, width=1600, height=900, relief='flat')
 canvas.pack()
-# Create the graph
-draw_graph()
-# Create the Listbox
-listbox = tk.Listbox(root, selectmode=tk.MULTIPLE)
-listbox.place(x=800, y=720)
-# Add items to the Listbox
+
+listbox_selection = scrolledtext.ScrolledText(root, width=40, height=5, wrap=tk.WORD)  # ใช้ scrolledtext.ScrolledText แทน Label
+listbox_selection.place(x=950, y=750)
+
+listbox_frame = tk.Frame(root)
+listbox_frame.place(x=800, y=720)
+
+listbox_scrollbar = tk.Scrollbar(listbox_frame, orient="vertical")
+listbox_scrollbar.pack(side="right", fill="y")
+
+listbox = tk.Listbox(listbox_frame, selectmode=tk.MULTIPLE, yscrollcommand=listbox_scrollbar.set)
+listbox.pack(side="left", fill="both", expand=True)
+
+listbox_scrollbar.config(command=listbox.yview)
+
 items = db.get_productname()
 for item in items:
     listbox.insert(tk.END, item)
-# Bind the selection event to the Listbox
+    
 listbox.bind("<<ListboxSelect>>", on_select)
-# Create the Label to display selected items
-label = tk.Label(root, text="")
-label.place(x=950, y=830)
+my_label = tk.Label(root, text=dis, font=("Arial", 12))
+my_label.place(x=960, y=720)
+exit_button = tk.Button(root, text="Exit", command=exit_program)
+exit_button.place(relx=1, rely=1, anchor="se")
+list_product  = tk.Label(root, text='รายการสินค้า', font=("Arial", 12))
+list_product.place(x=700, y=720)
+on_select()
+
 root.mainloop()
