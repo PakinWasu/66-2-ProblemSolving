@@ -89,6 +89,31 @@ def get_pos_node():
             sqliteConnection.close()
     return(pos)
 
+def get_productname_by_idshelf(idshelf):
+    try:
+        sqliteConnection = sqlite3.connect(sqlfile)
+        cursor = sqliteConnection.cursor()
+       
+        sqlite_select_query = f"""SELECT Product.Name FROM Product WHERE Product.IDshelf = ?;"""
+        data = (idshelf)
+        cursor.execute(sqlite_select_query,[data])
+        records = cursor.fetchall()
+        text = ""
+        for item in records:
+            if item == records[len(records)-1]:
+                text += item[0]   
+                break 
 
+            text += item[0] + "\n"
+
+        # print(text)
+    except sqlite3.Error as error:
+        print("Failed to read rows from sqlite table", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+        return(text)
+
+#print(get_productname_by_idshelf('FV11'))
 # pos = get_pos_node()
 # print(pos)

@@ -1,3 +1,4 @@
+
 import tkinter as tk
 import DBfunction as db
 import matplotlib.pyplot as plt
@@ -5,6 +6,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import networkx as nx
 import matplotlib.image as mpimg
 from collections import Counter
+
+
+
+
+
+
 selected_items = []  # Initialize a variable to store selected items
 selected_nodes = []
 g = nx.Graph()
@@ -33,15 +40,28 @@ def find_path_edge(path):
     for sub in src_dest :
         for res in sub:
             srcdest_edge.append(res)
-    print(srcdest_edge)
+    # print(srcdest_edge)
     edge = [srcdest_edge[0]]
     for i in range(1, len(srcdest_edge)):
         if srcdest_edge[i] != srcdest_edge[i - 1]:  # ถ้าข้อมูลไม่เท่ากับข้อมูลก่อนหน้า (ไม่ซ้ำ)
-            edge.append(srcdest_edge[i])  # เพิ่มข้อมูลเข้าไปใน new_list        
-    return edge
+            edge.append(srcdest_edge[i])  # เพิ่มข้อมูลเข้าไปใน new_list 
+    # print(edge)
+    main_dis = db.get_distanc()
+    edge_use = []
+    for i in range(len(edge)-1):
+
+        for m in main_dis:
+            
+            if edge[i] == m[0] and edge[i+1] == m[1]:
+                edge_use.append(m)
+    return edge_use
+def total_dis(edge):
+    dis = 0
+    for i in edge:
+        dis += i[2]
+    return dis
 def find_path(slcnode):    
     path = [slcnode[0]]
-    keep_u = []
     # print(slcnode)
     while(len(path) < len(slcnode)-1):
         sort_i = sort_nodes_by_distance(g,path[len(path)-1])
@@ -92,17 +112,19 @@ def draw_graph():
             selected_nodes.append (i)  # Convert selected items to a set for faster lookup
         selected_nodes.append('SV02')    
     selected_nodes = list(Counter(selected_nodes).keys())
-    
-    print('โนดที่เลือก',selected_nodes)
-    pathsh = find_path_edge(find_path_edge(selected_nodes))
-    selected_edges = []  
-    for edge in db.get_distanc():
-        for index_slc in range(len(pathsh)-1):
-            if (edge[0] in pathsh[index_slc] and edge[1] in pathsh[index_slc+1]):
-                selected_edges.append(edge)
-    print(selected_edges)
+    # print('โนดที่เลือก',selected_nodes)
+    pathsh = find_path_edge(find_path(selected_nodes))
+    # print(pathsh)
+    selected_nodes = find_path(selected_nodes)
+    # namepro = []
+    # for prenode in selected_nodes:
+    #     re = (prenode,{'label':str(db.get_productname_by_idshelf(prenode))})
+    #     namepro.append(re)
+    # print(namepro)   
+    dis = total_dis(pathsh)
+    print(dis)
     network.add_nodes_from(selected_nodes)
-    network.add_weighted_edges_from(selected_edges)
+    network.add_weighted_edges_from(pathsh)
     pos = db.get_pos_node()
     fig, ax = plt.subplots(figsize=(16, 7.14))  # Set the size of the graph
     img = mpimg.imread("BG.png")  # Load the background image
@@ -112,8 +134,6 @@ def draw_graph():
     canvas.draw()
     canvas_widget = canvas.get_tk_widget()
     canvas_widget.place(x=0, y=0)  # Show the matplotlib canvas at position (0, 0)
-
-
 
 
 root = tk.Tk()
