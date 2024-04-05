@@ -5,7 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import networkx as nx
 import matplotlib.image as mpimg
 from collections import Counter
-selected_items = []  # Initialize a variable to store selected items
+selected_items = []  
 selected_nodes = []
 
 def sort_nodes_by_distance(graph, source_node):
@@ -22,7 +22,34 @@ def sort_nodes_by_distance(graph, source_node):
     sorted_nodes = sorted(distances, key=distances.get)  # เรียงโนดตามระยะทางจากน้อยไปมาก
     return sorted_nodes
 
+def find_path(slcnode):    
+    g = nx.Graph()
+    g.add_nodes_from(db.get_node())
+    g.add_weighted_edges_from(db.get_distanc())
+    path = []
+    keep_u = []
 
+    for i in range(len(slcnode)-1):
+        lestes = 9999999
+        for k in slcnode :
+            if k not in keep_u:
+                sort_i = sort_nodes_by_distance(g,slcnode[i])
+                if sort_i.index(k) <= lestes and sort_i.index(k) != 0 :
+                    lestes = sort_i.index(k)
+        keep_u.append(slcnode[i])
+        path.append(sort_i[lestes]) 
+
+    path.insert(0,'SV01')
+    short_path = []
+    for shot in range(len(path)-1):
+        closest_path = nx.shortest_path(g, path[shot], path[shot+1], weight='weight')
+        short_path.append(closest_path)
+   
+    short_path_use = []
+    for sublist in short_path:
+        for asd in sublist:
+            short_path_use.append(asd)    
+    return short_path_use
 
 def on_select(event=None):
     global selected_items
@@ -43,40 +70,28 @@ def draw_graph():
             selected_nodes.append (i)  # Convert selected items to a set for faster lookup
         selected_nodes.append('SV02')    
     selected_nodes = list(Counter(selected_nodes).keys())
-    
-    
-    
-    
+
     print('โนดที่เลือก',selected_nodes)
-    print(find_path())
-    
-    
+    path = find_path(selected_nodes)   
+    path = list(Counter(path).keys())
+    # selected_nodes = path
+    print(selected_nodes)
     selected_edges = []  # Initialize a list to store selected edges
-   
     
     for edge in db.get_distanc():
         if (edge[0] in selected_nodes and edge[1] in selected_nodes) or (edge[1] in selected_nodes and edge[0] in selected_nodes):
             selected_edges.append(edge)
 
-    network.add_nodes_from(selected_nodes)
+    network.add_nodes_from(selected_edges)
     network.add_weighted_edges_from(selected_edges)
-    
-    
-    
 
-    
-    
-    
-    
-    
-    
     pos = db.get_pos_node()
 
     fig, ax = plt.subplots(figsize=(16, 7.14))  # Set the size of the graph
     img = mpimg.imread("BG.png")  # Load the background image
     ax.imshow(img, aspect='auto')  # Set the background image of the graph
 
-    nx.draw(g, pos, ax=ax, with_labels=True, node_size=250, node_color='black', font_size=6, edge_color='blue', font_color='white')
+    nx.draw(network, pos, ax=ax, with_labels=True, node_size=250, node_color='black', font_size=6, edge_color='blue', font_color='white')
 
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
@@ -86,21 +101,6 @@ def draw_graph():
 g = nx.Graph()
 g.add_nodes_from(db.get_node())
 g.add_weighted_edges_from(db.get_distanc())
-
-def find_path():    
-    global selected_nodes
-    slc_node = selected_nodes
-    slc_node = list(slc_node)
-    sorted_main_node=sort_nodes_by_distance(g,slc_node[0])
-    closest = ''
-    
-    for i in sorted_main_node:
-        for k in selected_nodes:
-            if k == i :
-                closest=i
-                return closest
-
-
 
 root = tk.Tk()
 root.title('makro')
